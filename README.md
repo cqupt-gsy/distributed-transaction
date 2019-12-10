@@ -1,4 +1,8 @@
-### 分布式事务实战
+## 分布式事务实战
+
+### 命令行参数参考
+
+* 单独运行一个module: ```./mvnw spring-boot:run -pl {module name}```，可以参考https://stackoverflow.com/questions/1114026/maven-modules-building-a-single-specific-module
 
 ### 实战细节设计
 
