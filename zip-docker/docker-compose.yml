@@ -1,9 +1,8 @@
 version: '3.7'
 
 services:
-  transactions_db:
+  mysql:
     image: mysql:8.0.18
-    container_name: 'transactions-db'
     command: ['--default-time-zone=+8:00']
     environment:
       MYSQL_ROOT_PASSWORD: admin-root
@@ -13,7 +12,7 @@ services:
       - 3308:3306 # hostPort:containerPort
     networks:
       - distributed-transactions
-    # refer to: https://github.com/wurstmeister/kafka-docker, https://hub.docker.com/r/wurstmeister/kafka
+  # refer to: https://github.com/wurstmeister/kafka-docker, https://hub.docker.com/r/wurstmeister/kafka
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
@@ -26,9 +25,34 @@ services:
       - zookeeper
     ports:
       - 9092:9092
-    environment:
-      KAFKA_ADVERTISED_HOST_NAME: 192.168.0.100
+    environment: # listener config refer to: https://rmoff.net/2018/08/02/kafka-listeners-explained/
+      KAFKA_LISTENERS: LISTENER_INTERNAL://kafka:29092,LISTENER_EXTERNAL://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka:29092,LISTENER_EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    networks:
+      - distributed-transactions
+  zookeeper-ui: # refer to: https://hub.docker.com/r/tobilg/zookeeper-webui
+    image: tobilg/zookeeper-webui
+    depends_on:
+      - zookeeper
+    ports:
+      - 8899:8080
+    environment:
+      ZK_DEFAULT_NODE: zookeeper:2181
+    networks:
+      - distributed-transactions
+  kafka-ui: # refer to: https://hub.docker.com/r/obsidiandynamics/kafdrop
+    image: obsidiandynamics/kafdrop
+    depends_on:
+      - kafka
+    ports:
+      - 8889:9000
+    environment:
+      KAFKA_BROKERCONNECT: kafka:29092
+      JVM_OPTS: -Xms32M -Xmx64M
+      SERVER_SERVLET_CONTEXTPATH: /
     networks:
       - distributed-transactions
 networks:
