@@ -12,8 +12,21 @@ services:
       - 3308:3306 # hostPort:containerPort
     networks:
       - distributed-transactions
-  # refer to: https://github.com/wurstmeister/kafka-docker, https://hub.docker.com/r/wurstmeister/kafka
-  zookeeper:
+  mycat: # refer to: https://github.com/dekuan/docker.mycat
+    image: dockermycat_mycat
+    depends_on:
+      - mysql
+    volumes:
+      - ./config/mycat/:/mycat/conf/:rw
+      - ./log/mycat-logs/:/mycat/logs/:rw
+      - ./config/hosts:/etc/hosts:ro
+    ports:
+      - "8066:8066"
+    ulimits:
+      nproc: 65535
+    networks:
+      - distributed-transactions
+  zookeeper: # refer to: https://github.com/wurstmeister/kafka-docker, https://hub.docker.com/r/wurstmeister/kafka
     image: wurstmeister/zookeeper
     ports:
       - 2181:2181

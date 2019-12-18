@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!DOCTYPE mycat:schema SYSTEM "schema.dtd">
+<mycat:schema xmlns:mycat="http://io.mycat/">
+
+  <schema name="user_account" checkSQLschema="true" sqlMaxLimit="100">
+    <table
+      name="account"
+      primaryKey="id"
+      dataNode="user_account_1, user_account_2"
+      rule="mod-long"/>
+  </schema>
+
+  <dataNode name="user_account_1" dataHost="accountHost" database="user_account_1"/>
+  <dataNode name="user_account_2" dataHost="accountHost" database="user_account_2"/>
+
+  <!--
+  balance
+    0, 不开启读写分离机制，所有读操作都发送到当前可用的writeHost上。
+    1，全部的readHost与stand by writeHost参与select语句的负载均衡，简单的说，当双主双从模式(M1->S1，M2->S2，并且M1与M2互为主备)，正常情况下，M2,S1,S2都参与select语句的负载均衡。
+    2，所有读操作都随机的在writeHost、readhost上分发。
+    3，所有读请求随机的分发到wiriterHost对应的readhost执行，writerHost不负担读压力
+
+  writeType 表示写模式
+    0，所有的操作发送到配置的第一个writehost
+    1，随机发送到配置的所有writehost
+    2，不执行写操作
+
+  switchType 指的是切换的模式，目前的取值也有4种：
+    -1，表示不自动切换
+     1，默认值，表示自动切换
+     2，基于MySQL主从同步的状态决定是否切换,心跳语句为show slave status
+     3，基于MySQL galary cluster的切换机制（适合集群）（1.4.1），心跳语句为show status like ‘wsrep%‘。
+  -->
+  <dataHost name="accountHost" maxCon="1000" minCon="10" balance="0"
+    writeType="0" dbType="mysql" dbDriver="jdbc" switchType="-1" slaveThreshold="100">
+    <heartbeat>select 1</heartbeat>
+    <writeHost
+      host="127.0.0.1"
+      url="jdbc:mysql://172.21.0.3:3306?useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;characterEncoding=utf8&amp;useUnicode=true"
+      user="root" password="admin-root">
+    </writeHost>
+  </dataHost>
+
+</mycat:schema>

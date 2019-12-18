@@ -16,3 +16,23 @@ CREATE TABLE IF NOT EXISTS distributed_transactions.transactions
     create_at           DATETIME                              NOT NULL,
     update_at           DATETIME                              NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS user_account_1.account
+(
+    id           INTEGER                         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    phone_number VARCHAR(11)                     NOT NULL UNIQUE, -- 转账人账号-手机号
+    name         VARCHAR(100) CHARACTER SET utf8 NOT NULL,        -- 转账人姓名
+    balance      DECIMAL(15, 2)                  NOT NULL,        -- 13代表总的金额位，2代表精度
+    create_at    DATETIME                        NOT NULL,
+    update_at    DATETIME                        NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_account_2.account
+(
+    id           INTEGER                         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    phone_number VARCHAR(11)                     NOT NULL UNIQUE, -- 转账人账号-手机号
+    name         VARCHAR(100) CHARACTER SET utf8 NOT NULL,        -- 转账人姓名
+    balance      DECIMAL(15, 2)                  NOT NULL,        -- 13代表总的金额位，2代表精度
+    create_at    DATETIME                        NOT NULL,
+    update_at    DATETIME                        NOT NULL
+);

@@ -3,6 +3,11 @@
 ### 命令行参数参考
 
 * 单独运行一个module: ```./mvnw spring-boot:run -pl {module name}```，可以参考https://stackoverflow.com/questions/1114026/maven-modules-building-a-single-specific-module
+* 配置mycat容器步骤，关于mycat的配置详情可以参考https://github.com/MyCATApache/Mycat-Server，https://github.com/dekuan/docker.mycat， https://www.jianshu.com/p/f81422b1c915
+    * 首先进入 ```./zip-docker/mycat```，允许命令 ```docker-compose build```，在本地建立image
+    * 其次运行 ```docker image ls``` 找到对应的mycat docker image
+    * 最后在 ```./zip-docker/docker-compose.yml``` 中配置mycat service
+    * ```docker-compose up mysql, docker-compose up -d```启动时请注意，必须先启动mysql服务，并且创建对应的数据库和表，然后在启动mycat，否则mycat会启动失败
 
 ### 实战细节设计
 
