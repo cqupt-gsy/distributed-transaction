@@ -19,7 +19,7 @@ public interface TransactionRepository {
   List<Transaction> findAll();
 
   @Insert(INSERT_TRANSACTION)
-  @Options(useGeneratedKeys = true, keyProperty = "id", flushCache = FlushCachePolicy.TRUE)
+  @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn="id", flushCache = FlushCachePolicy.TRUE)
   void save(Transaction transaction);
 
   @Select(SELECT_EXISTS_BY)

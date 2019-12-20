@@ -1,5 +1,9 @@
 package apprentice.practice.transactions.sqlprovider;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class TransactionSQLProvider {
 
   public static final String SELECT_ALL = "SELECT * FROM transactions";
@@ -12,5 +16,4 @@ public final class TransactionSQLProvider {
       + "VALUES(#{transactionNumber}, #{transactionMoney}, #{transformerAccount}, #{transformerName}, #{transformeeAccount}, #{transformeeName}, "
       + "#{status}, #{transactionTime}, #{envelopeId}, #{envelopeMoney}, #{integralId}, #{integral}, #{createAt}, #{updateAt})";
 
-  private TransactionSQLProvider() {}
 }

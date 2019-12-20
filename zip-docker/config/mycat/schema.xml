@@ -6,6 +6,8 @@
     <table
       name="account"
       primaryKey="id"
+      autoIncrement="true"
+      type="global"
       dataNode="user_account_1, user_account_2"
       rule="mod-long"/>
   </schema>
@@ -36,7 +38,7 @@
     <heartbeat>select 1</heartbeat>
     <writeHost
       host="127.0.0.1"
-      url="jdbc:mysql://172.21.0.3:3306?useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;characterEncoding=utf8&amp;useUnicode=true"
+      url="jdbc:mysql://172.21.0.2:3306?useSSL=false&amp;serverTimezone=Asia/Shanghai&amp;characterEncoding=utf8&amp;useUnicode=true"
       user="root" password="admin-root">
     </writeHost>
   </dataHost>
