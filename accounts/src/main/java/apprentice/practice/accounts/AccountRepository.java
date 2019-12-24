@@ -2,12 +2,17 @@
 package apprentice.practice.accounts;
 
 import static apprentice.practice.accounts.sqlprovider.AccountSQLProvider.INSERT_ACCOUNT;
+import static apprentice.practice.accounts.sqlprovider.AccountSQLProvider.TRANSFER_FROM;
+import static apprentice.practice.accounts.sqlprovider.AccountSQLProvider.TRANSFER_TO;
 
 import apprentice.practice.accounts.model.Account;
+import apprentice.practice.api.services.command.TransferFromCommand;
+import apprentice.practice.api.services.command.TransferToCommand;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Options.FlushCachePolicy;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface AccountRepository {
@@ -15,4 +20,10 @@ public interface AccountRepository {
   @Insert(INSERT_ACCOUNT)
   @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn="id", flushCache = FlushCachePolicy.TRUE)
   void save(Account account);
+
+  @Update(TRANSFER_FROM)
+  boolean transferFrom(TransferFromCommand command);
+
+  @Update(TRANSFER_TO)
+  boolean transferTo(TransferToCommand command);
 }

@@ -8,7 +8,7 @@ public final class TransactionSQLProvider {
 
   public static final String SELECT_ALL = "SELECT * FROM transactions";
 
-  public static final String SELECT_EXISTS_BY = "SELECT EXISTS (SELECT COUNT(id) FROM transactions WHERE transaction_number=#{transactionNumber})";
+  public static final String SELECT_EXISTS_BY = "SELECT EXISTS (SELECT 1 FROM transactions WHERE transaction_number=#{transactionNumber})";
 
   public static final String INSERT_TRANSACTION = "INSERT INTO "
       + "transactions(transaction_number, transaction_money, transformer_account, transformer_name, transformee_account, transformee_name, status, "

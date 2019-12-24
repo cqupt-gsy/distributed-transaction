@@ -5,18 +5,25 @@ import static java.util.Objects.nonNull;
 import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.apache.logging.log4j.util.Strings.isNotBlank;
 
+import apprentice.practice.api.services.accounts.AccountService;
+import apprentice.practice.api.services.command.TransferFromCommand;
+import apprentice.practice.api.services.command.TransferToCommand;
 import apprentice.practice.transactions.TransactionRepository;
 import apprentice.practice.transactions.command.TransactionCommand;
 import apprentice.practice.transactions.model.Transaction;
 import java.math.BigDecimal;
 import java.security.InvalidParameterException;
 import java.util.List;
+import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TransactionService {
 
+  @Reference
+  private AccountService accountService;
   private final TransactionRepository repository;
 
   @Autowired
@@ -28,6 +35,7 @@ public class TransactionService {
     return repository.findAll();
   }
 
+  @Transactional
   public void begin(TransactionCommand command) {
     verifyTransactionMoney(command.getTransactionMoney());
     verifyAccount(command.getTransformerAccount(), command.getTransformerName());
@@ -38,6 +46,16 @@ public class TransactionService {
 
     Transaction transaction = Transaction.createBy(command);
     repository.save(transaction);
+    accountService.transferFrom(
+        TransferFromCommand.createFrom(
+            command.getTransformerAccount(),
+            command.getTransformerName(),
+            command.getTransactionMoney()));
+    accountService.transferTo(
+        TransferToCommand.createFrom(
+            command.getTransformeeAccount(),
+            command.getTransformeeName(),
+            command.getTransactionMoney()));
   }
 
   private void verifyTransactionMoney(BigDecimal transactionMoney) {

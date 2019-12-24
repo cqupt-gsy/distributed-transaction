@@ -17,12 +17,12 @@ public class Account {
   private LocalDateTime createAt;
   private LocalDateTime updateAt;
 
-  public static Account createBy(CreateAccountCommand createAccountCommand) {
+  public static Account createBy(CreateAccountCommand command) {
     LocalDateTime currentServerTime = LocalDateTime.now();
     return Account.builder()
-        .phoneNumber(createAccountCommand.getPhoneNumber())
-        .name(createAccountCommand.getName())
-        .balance(createAccountCommand.getBalance())
+        .phoneNumber(command.getPhoneNumber())
+        .name(command.getName())
+        .balance(command.getBalance())
         .createAt(currentServerTime)
         .updateAt(currentServerTime)
         .build();
