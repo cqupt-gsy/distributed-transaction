@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS distributed_transactions.transactions
     transformer_name    VARCHAR(100) CHARACTER SET utf8       NOT NULL,        -- 转账人姓名
     transformee_account VARCHAR(11)                           NOT NULL,        -- 被转账人账号-手机号
     transformee_name    VARCHAR(100) CHARACTER SET utf8       NOT NULL,        -- 被转账人姓名
-    status              ENUM ('CREATED', 'SUCCESS', 'FAILED') NOT NULL DEFAULT 'CREATED',
     transaction_time    DATETIME                              NOT NULL,
     envelope_id         VARCHAR(36)                                    DEFAULT NULL,
     envelope_money      DECIMAL(6, 2)                                  DEFAULT NULL,

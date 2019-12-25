@@ -36,7 +36,7 @@ public class TransactionService {
   }
 
   @Transactional
-  public void begin(TransactionCommand command) {
+  public String begin(TransactionCommand command) {
     verifyTransactionMoney(command.getTransactionMoney());
     verifyAccount(command.getTransformerAccount(), command.getTransformerName());
     verifyAccount(command.getTransformeeAccount(), command.getTransformeeName());
@@ -46,16 +46,22 @@ public class TransactionService {
 
     Transaction transaction = Transaction.createBy(command);
     repository.save(transaction);
-    accountService.transferFrom(
+    boolean transferFromResult = accountService.transferFrom(
         TransferFromCommand.createFrom(
             command.getTransformerAccount(),
             command.getTransformerName(),
             command.getTransactionMoney()));
-    accountService.transferTo(
+    boolean transferToResult = accountService.transferTo(
         TransferToCommand.createFrom(
             command.getTransformeeAccount(),
             command.getTransformeeName(),
             command.getTransactionMoney()));
+    if (transferFromResult && transferToResult) {
+      return "OK! transaction success with transaction number: " + transaction.getTransactionNumber();
+    } else{
+      return "Ops, transaction failed.";
+    }
+
   }
 
   private void verifyTransactionMoney(BigDecimal transactionMoney) {

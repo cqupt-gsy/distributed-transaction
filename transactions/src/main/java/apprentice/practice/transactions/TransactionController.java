@@ -26,8 +26,8 @@ public class TransactionController {
   }
 
   @PostMapping("/create")
-  public void begin(@RequestBody TransactionCommand transactionCommand) {
-    transactionService.begin(transactionCommand);
+  public String begin(@RequestBody TransactionCommand transactionCommand) {
+    return transactionService.begin(transactionCommand);
   }
 
 }

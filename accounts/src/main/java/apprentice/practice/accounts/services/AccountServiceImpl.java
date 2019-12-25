@@ -8,7 +8,6 @@ import apprentice.practice.api.services.command.TransferFromCommand;
 import apprentice.practice.api.services.command.TransferToCommand;
 import org.apache.dubbo.config.annotation.Service;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -27,13 +26,11 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  @Transactional
   public boolean transferFrom(TransferFromCommand command) {
     return accountRepository.transferFrom(command);
   }
 
   @Override
-  @Transactional
   public boolean transferTo(TransferToCommand command) {
     return accountRepository.transferTo(command);
   }

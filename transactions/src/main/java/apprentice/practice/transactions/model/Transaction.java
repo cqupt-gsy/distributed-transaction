@@ -1,7 +1,6 @@
 package apprentice.practice.transactions.model;
 
 import apprentice.practice.transactions.command.TransactionCommand;
-import apprentice.practice.transactions.enums.TransactionStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -19,7 +18,6 @@ public class Transaction {
   private String transformerName;
   private String transformeeAccount;
   private String transformeeName;
-  private TransactionStatus status;
   private LocalDateTime transactionTime;
   private String envelopeId;
   private BigDecimal envelopeMoney;
@@ -37,7 +35,6 @@ public class Transaction {
         .transformerName(command.getTransformerName())
         .transformeeAccount(command.getTransformeeAccount())
         .transformeeName(command.getTransformeeName())
-        .status(TransactionStatus.CREATED)
         .transactionTime(currentServerTime)
         .envelopeId(command.getEnvelopeId())
         .envelopeMoney(command.getEnvelopeMoney())
