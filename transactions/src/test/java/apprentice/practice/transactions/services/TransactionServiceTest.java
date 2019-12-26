@@ -19,21 +19,17 @@ class TransactionServiceTest {
 
   private TransactionCommand command;
 
-  @Mock
-  private TransactionRepository repository;
+  @Mock private TransactionRepository repository;
 
-  @InjectMocks
-  private TransactionService service;
+  @InjectMocks private TransactionService service;
 
   @BeforeEach
   void setUp() {
     command = new TransactionCommand();
     command.setTransactionNumber("transactionNumber");
     command.setTransactionMoney(BigDecimal.valueOf(0));
-    command.setTransformerAccount("transformerAccount");
-    command.setTransformerName("transformerName");
-    command.setTransformeeAccount("transformeeAccount");
-    command.setTransformeeName("transformeeName");
+    command.setTransformerId(1);
+    command.setTransformeeId(2);
     command.setEnvelopeId("envelopId");
     command.setEnvelopeMoney(BigDecimal.valueOf(0));
     command.setIntegralId("integralId");
@@ -59,8 +55,8 @@ class TransactionServiceTest {
   }
 
   @Test
-  void should_throw_exception_when_transformer_account_is_blank() {
-    command.setTransformerAccount(" ");
+  void should_throw_exception_when_transformer_id_is_null() {
+    command.setTransformerId(null);
 
     assertThatThrownBy(() -> service.begin(command))
         .hasMessage("Transaction account invalid")
@@ -68,8 +64,8 @@ class TransactionServiceTest {
   }
 
   @Test
-  void should_throw_exception_when_transformer_name_is_blank() {
-    command.setTransformerAccount(null);
+  void should_throw_exception_when_transformee_id_is_null() {
+    command.setTransformeeId(null);
 
     assertThatThrownBy(() -> service.begin(command))
         .hasMessage("Transaction account invalid")
@@ -77,17 +73,9 @@ class TransactionServiceTest {
   }
 
   @Test
-  void should_throw_exception_when_transformee_account_is_blank() {
-    command.setTransformeeAccount("");
-
-    assertThatThrownBy(() -> service.begin(command))
-        .hasMessage("Transaction account invalid")
-        .isInstanceOf(InvalidParameterException.class);
-  }
-
-  @Test
-  void should_throw_exception_when_transformee_name_is_blank() {
-    command.setTransformeeAccount(null);
+  void should_throw_exception_when_transformer_id_equal_to_transformee_id() {
+    command.setTransformerId(1);
+    command.setTransformeeId(1);
 
     assertThatThrownBy(() -> service.begin(command))
         .hasMessage("Transaction account invalid")
@@ -129,7 +117,6 @@ class TransactionServiceTest {
         .hasMessage("Transaction integral invalid")
         .isInstanceOf(InvalidParameterException.class);
   }
-
 
   @Test
   void should_throw_exception_when_integral_id_is_not_blank_integral_is_null() {

@@ -7,7 +7,6 @@
       name="account"
       primaryKey="id"
       autoIncrement="true"
-      type="global"
       dataNode="user_account_1, user_account_2"
       rule="mod-long"/>
   </schema>

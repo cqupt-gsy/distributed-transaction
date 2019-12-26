@@ -6,25 +6,25 @@ import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.apache.logging.log4j.util.Strings.isNotBlank;
 
 import apprentice.practice.api.services.accounts.AccountService;
-import apprentice.practice.api.services.command.TransferFromCommand;
-import apprentice.practice.api.services.command.TransferToCommand;
+import apprentice.practice.api.services.command.TransferCommand;
 import apprentice.practice.transactions.TransactionRepository;
 import apprentice.practice.transactions.command.TransactionCommand;
 import apprentice.practice.transactions.model.Transaction;
 import java.math.BigDecimal;
 import java.security.InvalidParameterException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 public class TransactionService {
 
-  @Reference
-  private AccountService accountService;
   private final TransactionRepository repository;
+  @Reference private AccountService accountService;
 
   @Autowired
   public TransactionService(TransactionRepository repository) {
@@ -38,30 +38,31 @@ public class TransactionService {
   @Transactional
   public String begin(TransactionCommand command) {
     verifyTransactionMoney(command.getTransactionMoney());
-    verifyAccount(command.getTransformerAccount(), command.getTransformerName());
-    verifyAccount(command.getTransformeeAccount(), command.getTransformeeName());
+    verifyAccount(command.getTransformerId(), command.getTransformeeId());
     verifyEnvelope(command.getEnvelopeId(), command.getEnvelopeMoney());
     verifyIntegral(command.getIntegralId(), command.getIntegral());
     verifyTransactionNumber(command.getTransactionNumber());
 
     Transaction transaction = Transaction.createBy(command);
     repository.save(transaction);
-    boolean transferFromResult = accountService.transferFrom(
-        TransferFromCommand.createFrom(
-            command.getTransformerAccount(),
-            command.getTransformerName(),
-            command.getTransactionMoney()));
-    boolean transferToResult = accountService.transferTo(
-        TransferToCommand.createFrom(
-            command.getTransformeeAccount(),
-            command.getTransformeeName(),
-            command.getTransactionMoney()));
+    log.info(
+        "Transactions begins with transaction number {}, transformerId {}, transformeeId {}",
+        command.getTransactionNumber(),
+        command.getTransformerId(),
+        command.getTransformeeId());
+
+    boolean transferFromResult =
+        accountService.transferFrom(
+            TransferCommand.createFrom(command.getTransformerId(), command.getTransactionMoney()));
+    boolean transferToResult =
+        accountService.transferTo(
+            TransferCommand.createFrom(command.getTransformeeId(), command.getTransactionMoney()));
     if (transferFromResult && transferToResult) {
-      return "OK! transaction success with transaction number: " + transaction.getTransactionNumber();
-    } else{
+      return "OK! transaction success with transaction number: "
+          + transaction.getTransactionNumber();
+    } else {
       return "Ops, transaction failed.";
     }
-
   }
 
   private void verifyTransactionMoney(BigDecimal transactionMoney) {
@@ -70,8 +71,11 @@ public class TransactionService {
     }
   }
 
-  private void verifyAccount(String account, String name) {
-    if (isBlank(account) || isBlank(name)) {
+  private void verifyAccount(Integer transformerId, Integer transformeeId) {
+    if (isNull(transformerId) || isNull(transformeeId)) {
+      throw new InvalidParameterException("Transaction account invalid");
+    }
+    if (transformerId.equals(transformeeId)) {
       throw new InvalidParameterException("Transaction account invalid");
     }
   }
@@ -102,7 +106,8 @@ public class TransactionService {
 
   private void verifyTransactionNumber(String transactionNumber) {
     if (repository.existBy(transactionNumber)) {
-      throw new InvalidParameterException("Transaction is already started, please wait a minute...");
+      throw new InvalidParameterException(
+          "Transaction is already started, please wait a minute...");
     }
   }
 }

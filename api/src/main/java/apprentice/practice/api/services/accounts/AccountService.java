@@ -1,14 +1,13 @@
 package apprentice.practice.api.services.accounts;
 
 import apprentice.practice.api.services.command.CreateAccountCommand;
-import apprentice.practice.api.services.command.TransferFromCommand;
-import apprentice.practice.api.services.command.TransferToCommand;
+import apprentice.practice.api.services.command.TransferCommand;
 
 public interface AccountService {
 
   void create(CreateAccountCommand createAccountCommand);
 
-  boolean transferFrom(TransferFromCommand transferFromCommand);
+  boolean transferFrom(TransferCommand transferCommand);
 
-  boolean transferTo(TransferToCommand transferToCommand);
+  boolean transferTo(TransferCommand transferCommand);
 }

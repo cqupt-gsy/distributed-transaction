@@ -14,10 +14,8 @@ public class Transaction {
   private String transactionNumber;
   // refer to https://mybatis.org/mybatis-3/configuration.html#typeHandlers
   private BigDecimal transactionMoney;
-  private String transformerAccount;
-  private String transformerName;
-  private String transformeeAccount;
-  private String transformeeName;
+  private Integer transformerId;
+  private Integer transformeeId;
   private LocalDateTime transactionTime;
   private String envelopeId;
   private BigDecimal envelopeMoney;
@@ -31,10 +29,8 @@ public class Transaction {
     return Transaction.builder()
         .transactionNumber(command.getTransactionNumber())
         .transactionMoney(command.getTransactionMoney())
-        .transformerAccount(command.getTransformerAccount())
-        .transformerName(command.getTransformerName())
-        .transformeeAccount(command.getTransformeeAccount())
-        .transformeeName(command.getTransformeeName())
+        .transformerId(command.getTransformerId())
+        .transformeeId(command.getTransformeeId())
         .transactionTime(currentServerTime)
         .envelopeId(command.getEnvelopeId())
         .envelopeMoney(command.getEnvelopeMoney())

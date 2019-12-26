@@ -4,12 +4,14 @@ import apprentice.practice.accounts.AccountRepository;
 import apprentice.practice.accounts.model.Account;
 import apprentice.practice.api.services.accounts.AccountService;
 import apprentice.practice.api.services.command.CreateAccountCommand;
-import apprentice.practice.api.services.command.TransferFromCommand;
-import apprentice.practice.api.services.command.TransferToCommand;
+import apprentice.practice.api.services.command.TransferCommand;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 public class AccountServiceImpl implements AccountService {
 
   private final AccountRepository accountRepository;
@@ -26,12 +28,16 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public boolean transferFrom(TransferFromCommand command) {
+  @Transactional
+  public boolean transferFrom(TransferCommand command) {
+    log.info("Transfer out from {} with {}", command.getTransferId(), command.getBalance());
     return accountRepository.transferFrom(command);
   }
 
   @Override
-  public boolean transferTo(TransferToCommand command) {
+  @Transactional
+  public boolean transferTo(TransferCommand command) {
+    log.info("Transfer in to {} with {}", command.getTransferId(), command.getBalance());
     return accountRepository.transferTo(command);
   }
 }

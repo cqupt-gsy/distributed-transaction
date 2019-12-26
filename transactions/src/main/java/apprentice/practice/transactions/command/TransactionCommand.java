@@ -7,10 +7,8 @@ import lombok.Data;
 public class TransactionCommand {
   private String transactionNumber;
   private BigDecimal transactionMoney;
-  private String transformerAccount;
-  private String transformerName;
-  private String transformeeAccount;
-  private String transformeeName;
+  private Integer transformerId;
+  private Integer transformeeId;
   private String envelopeId;
   private BigDecimal envelopeMoney;
   private String integralId;
