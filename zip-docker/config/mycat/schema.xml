@@ -8,7 +8,19 @@
       primaryKey="id"
       autoIncrement="true"
       dataNode="user_account_1, user_account_2"
-      rule="mod-long"/>
+      rule="account-mod-long"/>
+    <table
+      name="account_back_up"
+      primaryKey="id"
+      autoIncrement="true"
+      dataNode="user_account_1, user_account_2"
+      rule="account-back-up-mod-long"/>
+    <table
+      name="distributed_lock"
+      primaryKey="id"
+      autoIncrement="true"
+      dataNode="user_account_1, user_account_2"
+      rule="distributed-lock-mod-long"/>
   </schema>
 
   <dataNode name="user_account_1" dataHost="accountHost" database="user_account_1"/>

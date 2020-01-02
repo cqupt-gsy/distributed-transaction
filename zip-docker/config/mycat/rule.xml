@@ -9,9 +9,21 @@
 	under the License. -->
 <!DOCTYPE mycat:rule SYSTEM "rule.dtd">
 <mycat:rule xmlns:mycat="http://io.mycat/">
-	<tableRule name="mod-long">
+	<tableRule name="account-mod-long">
 		<rule>
 			<columns>id</columns>
+			<algorithm>mod-long</algorithm>
+		</rule>
+	</tableRule>
+	<tableRule name="account-back-up-mod-long">
+		<rule>
+			<columns>user_id</columns>
+			<algorithm>mod-long</algorithm>
+		</rule>
+	</tableRule>
+	<tableRule name="distributed-lock-mod-long">
+		<rule>
+			<columns>user_id</columns>
 			<algorithm>mod-long</algorithm>
 		</rule>
 	</tableRule>

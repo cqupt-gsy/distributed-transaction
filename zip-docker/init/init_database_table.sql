@@ -33,3 +33,48 @@ CREATE TABLE IF NOT EXISTS user_account_2.account
     create_at    DATETIME                        NOT NULL,
     update_at    DATETIME                        NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS user_account_1.account_back_up
+(
+    id                 INTEGER        NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id            INTEGER        NOT NULL,
+    transaction_number VARCHAR(36)    NOT NULL UNIQUE,
+    original_balance   DECIMAL(15, 2) NOT NULL,
+    new_balance        DECIMAL(15, 2) NOT NULL,
+    transaction_money  DECIMAL(15, 2) NOT NULL,
+    create_at          DATETIME       NOT NULL,
+    update_at          DATETIME       NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_account_1.distributed_lock
+(
+    id                 INTEGER     NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id            INTEGER     NOT NULL UNIQUE,
+    transaction_number VARCHAR(36) NOT NULL UNIQUE,
+    lock_until         DATETIME    NOT NULL,
+    create_at          DATETIME    NOT NULL,
+    update_at          DATETIME    NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS user_account_2.account_back_up
+(
+    id                 INTEGER        NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id            INTEGER        NOT NULL,
+    transaction_number VARCHAR(36)    NOT NULL UNIQUE,
+    original_balance   DECIMAL(15, 2) NOT NULL,
+    new_balance        DECIMAL(15, 2) NOT NULL,
+    transaction_money  DECIMAL(15, 2) NOT NULL,
+    create_at          DATETIME       NOT NULL,
+    update_at          DATETIME       NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_account_2.distributed_lock
+(
+    id                 INTEGER     NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id            INTEGER     NOT NULL UNIQUE,
+    transaction_number VARCHAR(36) NOT NULL UNIQUE,
+    lock_until         DATETIME    NOT NULL,
+    create_at          DATETIME    NOT NULL,
+    update_at          DATETIME    NOT NULL
+);
