@@ -2,6 +2,7 @@ package apprentice.practice.transactions;
 
 import apprentice.practice.transactions.command.TransactionCommand;
 import apprentice.practice.transactions.model.Transaction;
+import apprentice.practice.transactions.services.TransactionManagerService;
 import apprentice.practice.transactions.services.TransactionService;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,9 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController {
 
   private final TransactionService transactionService;
+  private final TransactionManagerService transactionManagerService;
 
-  public TransactionController(TransactionService transactionService) {
+  public TransactionController(
+      TransactionService transactionService, TransactionManagerService transactionManagerService) {
     this.transactionService = transactionService;
+    this.transactionManagerService = transactionManagerService;
   }
 
   @GetMapping
@@ -26,8 +30,7 @@ public class TransactionController {
   }
 
   @PostMapping("/create")
-  public String begin(@RequestBody TransactionCommand transactionCommand) {
-    return transactionService.begin(transactionCommand);
+  public String create(@RequestBody TransactionCommand transactionCommand) {
+    return transactionManagerService.execute(transactionCommand);
   }
-
 }

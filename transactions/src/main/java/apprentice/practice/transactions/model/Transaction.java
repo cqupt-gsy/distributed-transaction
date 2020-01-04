@@ -1,6 +1,9 @@
 package apprentice.practice.transactions.model;
 
+import static apprentice.practice.transactions.enums.Status.TRY;
+
 import apprentice.practice.transactions.command.TransactionCommand;
+import apprentice.practice.transactions.enums.Status;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -21,6 +24,7 @@ public class Transaction {
   private BigDecimal envelopeMoney;
   private String integralId;
   private Integer integral;
+  private Status status;
   private LocalDateTime createAt;
   private LocalDateTime updateAt;
 
@@ -36,6 +40,7 @@ public class Transaction {
         .envelopeMoney(command.getEnvelopeMoney())
         .integralId(command.getIntegralId())
         .integral(command.getIntegral())
+        .status(TRY)
         .createAt(currentServerTime)
         .updateAt(currentServerTime)
         .build();

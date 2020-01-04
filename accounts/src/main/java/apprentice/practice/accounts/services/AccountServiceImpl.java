@@ -29,14 +29,14 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   @Transactional
-  public boolean transferFrom(TransferCommand command) {
+  public boolean tryTransferFrom(TransferCommand command) {
     log.info("Transfer out from {} with {}", command.getTransferId(), command.getBalance());
     return accountRepository.transferFrom(command);
   }
 
   @Override
   @Transactional
-  public boolean transferTo(TransferCommand command) {
+  public boolean tryTransferTo(TransferCommand command) {
     log.info("Transfer in to {} with {}", command.getTransferId(), command.getBalance());
     return accountRepository.transferTo(command);
   }

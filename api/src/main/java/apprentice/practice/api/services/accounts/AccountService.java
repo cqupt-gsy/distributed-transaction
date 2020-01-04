@@ -7,7 +7,7 @@ public interface AccountService {
 
   void create(CreateAccountCommand createAccountCommand);
 
-  boolean transferFrom(TransferCommand transferCommand);
+  boolean tryTransferFrom(TransferCommand transferCommand);
 
-  boolean transferTo(TransferCommand transferCommand);
+  boolean tryTransferTo(TransferCommand transferCommand);
 }
