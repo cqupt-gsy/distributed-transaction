@@ -1,5 +1,16 @@
 package apprentice.practice.transactions.services;
 
+import static apprentice.practice.api.services.enums.Results.CANCEL_STATUS;
+import static apprentice.practice.api.services.enums.Results.CONFIRM_STATUS;
+import static apprentice.practice.api.services.enums.Results.DUPLICATE_KEY;
+import static apprentice.practice.api.services.enums.Results.CREATE_TRANSACTION_SUCCESS;
+import static apprentice.practice.api.services.enums.Results.TRYING_STATUS;
+import static apprentice.practice.api.services.enums.Results.UNKNOWN_EXCEPTION;
+import static apprentice.practice.api.services.enums.Status.CANCEL;
+import static apprentice.practice.api.services.enums.Status.CONFIRM;
+import static apprentice.practice.api.services.enums.Status.TRY;
+
+import apprentice.practice.api.services.enums.Results;
 import apprentice.practice.transactions.TransactionRepository;
 import apprentice.practice.transactions.command.TransactionCommand;
 import apprentice.practice.transactions.model.Transaction;
@@ -25,32 +36,37 @@ public class TransactionService {
     return repository.findAll();
   }
 
-  // 在这里可以保证事务开始时，一定先记录了交易记录，该记录可以保证以下两个故障
-  // 1. 客户端发起重试时，可以保证交易的幂等
-  // 2. 事务服务挂了后，可以利用该记录恢复事务
+  // 该方法可以保证幂等，事务号相同的情况下，多次重试得到的结果是一致的
+  // 需要特别注意TRY状态，为了保证本服务在挂了后，客户端可以真正的执行重试，所以需要执行跟SUCCESS一样的步骤
+  // 因此所有的接口都必须幂等
   @Transactional
-  public boolean tryStartTransaction(TransactionCommand command) {
-    Transaction transaction = Transaction.createBy(command);
-    try {
-      log.info(
-          "Transactions begins with transaction number {}, transformerId {}, transformeeId {}",
-          command.getTransactionNumber(),
-          command.getTransformerId(),
-          command.getTransformeeId());
-      if (repository.existWithTryStatusFor(transaction.getTransactionNumber())) {
-        log.info(
-            "Transaction with transaction number {} already started in TRY status",
-            command.getTransactionNumber());
-        return true;
+  public Results tryStartTransaction(TransactionCommand command) {
+    String transactionNumber = command.getTransactionNumber();
+    Transaction alreadyExistsTransaction = repository.selectTransaction(transactionNumber);
+    if (alreadyExistsTransaction == null) { // 最初发生并发，都会进入该分支，但是会有一个失败，从而发起重试
+      try {
+        Transaction newTransaction = Transaction.createBy(command);
+        repository.save(newTransaction);
+        log.info("Start new transaction with transaction number {}", transactionNumber);
+        return CREATE_TRANSACTION_SUCCESS;
+      } catch (DuplicateKeyException ex) {
+        log.error("Transaction for duplicated key {}, wait a minute for retry", transactionNumber);
+        return DUPLICATE_KEY;
       }
-      repository.save(transaction);
-      return true;
-    } catch (DuplicateKeyException ex) {
-      log.error(
-          "Transaction already exists with duplicated key {} ", transaction.getTransactionNumber());
-      return false;
     }
+    if (alreadyExistsTransaction.getStatus() == CONFIRM) {
+      log.warn("Transaction already in CONFIRM status for {}, do not retry", transactionNumber);
+      return CONFIRM_STATUS;
+    }
+    if (alreadyExistsTransaction.getStatus() == CANCEL) {
+      log.warn("Transaction already in CANCEL status for {}, need start again", transactionNumber);
+      return CANCEL_STATUS;
+    }
+    if (alreadyExistsTransaction.getStatus() == TRY) {
+      log.warn("Transaction in TRY status with {}, wait a minute for retry", transactionNumber);
+      return TRYING_STATUS;
+    }
+    log.error("Transaction failed with unknown reason for {}, please try later", transactionNumber);
+    return UNKNOWN_EXCEPTION;
   }
-
-
 }

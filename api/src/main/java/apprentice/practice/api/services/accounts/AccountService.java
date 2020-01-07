@@ -2,12 +2,13 @@ package apprentice.practice.api.services.accounts;
 
 import apprentice.practice.api.services.command.CreateAccountCommand;
 import apprentice.practice.api.services.command.TransferCommand;
+import apprentice.practice.api.services.enums.Results;
 
 public interface AccountService {
 
   void create(CreateAccountCommand createAccountCommand);
 
-  boolean tryTransferFrom(TransferCommand transferCommand);
+  Results tryTransferFrom(TransferCommand transferCommand);
 
-  boolean tryTransferTo(TransferCommand transferCommand);
+  Results tryTransferTo(TransferCommand transferCommand);
 }

@@ -1,11 +1,19 @@
 package apprentice.practice.transactions.services;
 
+import static apprentice.practice.api.services.enums.Results.CANCEL_STATUS;
+import static apprentice.practice.api.services.enums.Results.CONFIRM_STATUS;
+import static apprentice.practice.api.services.enums.Results.CREATE_TRANSACTION_SUCCESS;
+import static apprentice.practice.api.services.enums.Results.DUPLICATE_KEY;
+import static apprentice.practice.api.services.enums.Results.TRANSFER_SUCCESS;
+import static apprentice.practice.api.services.enums.Results.TRYING_STATUS;
+import static apprentice.practice.api.services.enums.Results.UNKNOWN_EXCEPTION;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.apache.logging.log4j.util.Strings.isNotBlank;
 
+import apprentice.practice.api.services.enums.Results;
 import apprentice.practice.transactions.command.TransactionCommand;
 import java.math.BigDecimal;
 import java.security.InvalidParameterException;
@@ -19,6 +27,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TransactionManagerService {
 
+  private static final String CONFIRM_MESSAGE = "";
+
   private static final String SUCCESS_MESSAGE = "OK! transaction success.";
   private static final String FAILED_MESSAGE = "Ops, transaction failed.";
   private final TransactionService transactionService;
@@ -31,22 +41,31 @@ public class TransactionManagerService {
     this.accountManagerService = accountManagerService;
   }
 
-  //1. 实现Try阶段需要的逻辑
-  //2. 实现Confirm阶段需要的逻辑
-  //3. 实现Cancel阶段需要的逻辑
+  // 1. 实现Try阶段需要的逻辑
+  // 2. 实现Confirm阶段需要的逻辑
+  // 3. 实现Cancel阶段需要的逻辑
   public String execute(TransactionCommand command) {
     verifyTransactionMoney(command.getTransactionMoney());
     verifyAccount(command.getTransformerId(), command.getTransformeeId());
     verifyEnvelope(command.getEnvelopeId(), command.getEnvelopeMoney());
     verifyIntegral(command.getIntegralId(), command.getIntegral());
 
-    if (transactionService.tryStartTransaction(command)) {
-      CompletableFuture<Boolean> tryTransferFrom =
+    Results results = transactionService.tryStartTransaction(command);
+    if (results == TRYING_STATUS
+        || results == CONFIRM_STATUS
+        || results == CANCEL_STATUS
+        || results == DUPLICATE_KEY
+        || results == UNKNOWN_EXCEPTION) {
+      return results.getMessage();
+    } // TODO 如果执行到这里就挂了，所有的TRY状态都无法重试，必须重新开始新交易。需要自动恢复机制？
+
+    if (results == CREATE_TRANSACTION_SUCCESS) {
+      CompletableFuture<Results> tryTransferFrom =
           supplyAsync(() -> accountManagerService.tryTransferFrom(command));
-      CompletableFuture<Boolean> tryTransferTo =
+      CompletableFuture<Results> tryTransferTo =
           supplyAsync(() -> accountManagerService.tryTransferTo(command));
       try {
-        if (tryTransferFrom.get() && tryTransferTo.get()) {
+        if (tryTransferFrom.get() == TRANSFER_SUCCESS && tryTransferTo.get() == TRANSFER_SUCCESS) {
           return SUCCESS_MESSAGE;
         }
       } catch (InterruptedException | ExecutionException e) {

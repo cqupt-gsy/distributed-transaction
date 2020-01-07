@@ -6,11 +6,11 @@ CREATE TABLE IF NOT EXISTS distributed_transactions.transactions
     transformer_id     INTEGER                           NOT NULL,        -- 转账人ID
     transformee_id     INTEGER                           NOT NULL,        -- 被转账人ID
     transaction_time   DATETIME                          NOT NULL,
-    envelope_id        VARCHAR(36)                            DEFAULT NULL,
-    envelope_money     DECIMAL(6, 2)                          DEFAULT NULL,
-    integral_id        VARCHAR(36)                            DEFAULT NULL,
-    integral           INTEGER                                DEFAULT 0,
-    status             ENUM ('TRY', 'CONFIRM', 'CANCEL') NULL DEFAULT 'TRY',
+    envelope_id        VARCHAR(36)                                DEFAULT NULL,
+    envelope_money     DECIMAL(6, 2)                              DEFAULT NULL,
+    integral_id        VARCHAR(36)                                DEFAULT NULL,
+    integral           INTEGER                                    DEFAULT 0,
+    status             ENUM ('TRY', 'CONFIRM', 'CANCEL') NOT NULL DEFAULT 'TRY',
     create_at          DATETIME                          NOT NULL,
     update_at          DATETIME                          NOT NULL
 );
@@ -37,14 +37,15 @@ CREATE TABLE IF NOT EXISTS user_account_2.account
 
 CREATE TABLE IF NOT EXISTS user_account_1.account_back_up
 (
-    id                 INTEGER        NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id            INTEGER        NOT NULL,
-    transaction_number VARCHAR(36)    NOT NULL UNIQUE,
-    original_balance   DECIMAL(15, 2) NOT NULL,
-    new_balance        DECIMAL(15, 2) NOT NULL,
-    transaction_money  DECIMAL(15, 2) NOT NULL,
-    create_at          DATETIME       NOT NULL,
-    update_at          DATETIME       NOT NULL
+    id                 INTEGER                           NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id            INTEGER                           NOT NULL,
+    transaction_number VARCHAR(36)                       NOT NULL UNIQUE,
+    original_balance   DECIMAL(15, 2)                    NOT NULL,
+    new_balance        DECIMAL(15, 2)                    NOT NULL,
+    transaction_money  DECIMAL(15, 2)                    NOT NULL,
+    status             ENUM ('TRY', 'CONFIRM', 'CANCEL') NOT NULL DEFAULT 'TRY',
+    create_at          DATETIME                          NOT NULL,
+    update_at          DATETIME                          NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_account_1.distributed_lock
@@ -60,14 +61,15 @@ CREATE TABLE IF NOT EXISTS user_account_1.distributed_lock
 
 CREATE TABLE IF NOT EXISTS user_account_2.account_back_up
 (
-    id                 INTEGER        NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id            INTEGER        NOT NULL,
-    transaction_number VARCHAR(36)    NOT NULL UNIQUE,
-    original_balance   DECIMAL(15, 2) NOT NULL,
-    new_balance        DECIMAL(15, 2) NOT NULL,
-    transaction_money  DECIMAL(15, 2) NOT NULL,
-    create_at          DATETIME       NOT NULL,
-    update_at          DATETIME       NOT NULL
+    id                 INTEGER                           NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id            INTEGER                           NOT NULL,
+    transaction_number VARCHAR(36)                       NOT NULL UNIQUE,
+    original_balance   DECIMAL(15, 2)                    NOT NULL,
+    new_balance        DECIMAL(15, 2)                    NOT NULL,
+    transaction_money  DECIMAL(15, 2)                    NOT NULL,
+    status             ENUM ('TRY', 'CONFIRM', 'CANCEL') NOT NULL DEFAULT 'TRY',
+    create_at          DATETIME                          NOT NULL,
+    update_at          DATETIME                          NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_account_2.distributed_lock

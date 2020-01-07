@@ -18,14 +18,10 @@ public class Account {
   private LocalDateTime updateAt;
 
   public static Account createBy(CreateAccountCommand command) {
-    LocalDateTime currentServerTime = LocalDateTime.now();
     return Account.builder()
         .phoneNumber(command.getPhoneNumber())
         .name(command.getName())
         .balance(command.getBalance())
-        .createAt(currentServerTime)
-        .updateAt(currentServerTime)
         .build();
   }
-
 }

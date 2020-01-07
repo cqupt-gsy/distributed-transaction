@@ -1,9 +1,9 @@
 package apprentice.practice.transactions.model;
 
-import static apprentice.practice.transactions.enums.Status.TRY;
+import static apprentice.practice.api.services.enums.Status.TRY;
 
+import apprentice.practice.api.services.enums.Status;
 import apprentice.practice.transactions.command.TransactionCommand;
-import apprentice.practice.transactions.enums.Status;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Builder;
@@ -29,20 +29,16 @@ public class Transaction {
   private LocalDateTime updateAt;
 
   public static Transaction createBy(TransactionCommand command) {
-    LocalDateTime currentServerTime = LocalDateTime.now();
     return Transaction.builder()
         .transactionNumber(command.getTransactionNumber())
         .transactionMoney(command.getTransactionMoney())
         .transformerId(command.getTransformerId())
         .transformeeId(command.getTransformeeId())
-        .transactionTime(currentServerTime)
         .envelopeId(command.getEnvelopeId())
         .envelopeMoney(command.getEnvelopeMoney())
         .integralId(command.getIntegralId())
         .integral(command.getIntegral())
         .status(TRY)
-        .createAt(currentServerTime)
-        .updateAt(currentServerTime)
         .build();
   }
 }

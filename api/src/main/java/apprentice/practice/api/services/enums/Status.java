@@ -1,4 +1,4 @@
-package apprentice.practice.transactions.enums;
+package apprentice.practice.api.services.enums;
 
 public enum Status {
   TRY,
