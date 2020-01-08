@@ -7,25 +7,17 @@ public class TransferCommand implements Serializable {
 
   private static final long serialVersionUID = 8354323237159552163L;
 
-  private String transactionNumber;
   private Integer transferId;
+  private String transactionNumber;
   private BigDecimal balance;
 
   public static TransferCommand createFrom(
-      String transactionNumber, Integer transferId, BigDecimal transactionMoney) {
+      Integer transferId, String transactionNumber, BigDecimal transactionMoney) {
     TransferCommand transferCommand = new TransferCommand();
-    transferCommand.setTransactionNumber(transactionNumber);
     transferCommand.setTransferId(transferId);
+    transferCommand.setTransactionNumber(transactionNumber);
     transferCommand.setBalance(transactionMoney);
     return transferCommand;
-  }
-
-  public String getTransactionNumber() {
-    return transactionNumber;
-  }
-
-  public void setTransactionNumber(String transactionNumber) {
-    this.transactionNumber = transactionNumber;
   }
 
   public Integer getTransferId() {
@@ -34,6 +26,14 @@ public class TransferCommand implements Serializable {
 
   public void setTransferId(Integer transferId) {
     this.transferId = transferId;
+  }
+
+  public String getTransactionNumber() {
+    return transactionNumber;
+  }
+
+  public void setTransactionNumber(String transactionNumber) {
+    this.transactionNumber = transactionNumber;
   }
 
   public BigDecimal getBalance() {

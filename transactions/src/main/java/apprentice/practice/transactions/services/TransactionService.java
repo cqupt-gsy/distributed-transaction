@@ -2,8 +2,8 @@ package apprentice.practice.transactions.services;
 
 import static apprentice.practice.api.services.enums.Results.CANCEL_STATUS;
 import static apprentice.practice.api.services.enums.Results.CONFIRM_STATUS;
-import static apprentice.practice.api.services.enums.Results.DUPLICATE_KEY;
 import static apprentice.practice.api.services.enums.Results.CREATE_TRANSACTION_SUCCESS;
+import static apprentice.practice.api.services.enums.Results.DUPLICATE_KEY;
 import static apprentice.practice.api.services.enums.Results.TRYING_STATUS;
 import static apprentice.practice.api.services.enums.Results.UNKNOWN_EXCEPTION;
 import static apprentice.practice.api.services.enums.Status.CANCEL;
@@ -40,7 +40,7 @@ public class TransactionService {
   // 需要特别注意TRY状态，为了保证本服务在挂了后，客户端可以真正的执行重试，所以需要执行跟SUCCESS一样的步骤
   // 因此所有的接口都必须幂等
   @Transactional
-  public Results tryStartTransaction(TransactionCommand command) {
+  public Results tryTransaction(TransactionCommand command) {
     String transactionNumber = command.getTransactionNumber();
     Transaction alreadyExistsTransaction = repository.selectTransaction(transactionNumber);
     if (alreadyExistsTransaction == null) { // 最初发生并发，都会进入该分支，但是会有一个失败，从而发起重试
@@ -68,5 +68,17 @@ public class TransactionService {
     }
     log.error("Transaction failed with unknown reason for {}, please try later", transactionNumber);
     return UNKNOWN_EXCEPTION;
+  }
+
+  @Transactional
+  public boolean confirmTransaction(String transactionNumber) {
+    log.info("Confirm transaction for transaction number {}", transactionNumber);
+    return repository.update(transactionNumber, CONFIRM);
+  }
+
+  @Transactional
+  public boolean cancelTransaction(String transactionNumber) {
+    log.info("Cancel transaction for transaction number {}", transactionNumber);
+    return repository.update(transactionNumber, CANCEL);
   }
 }

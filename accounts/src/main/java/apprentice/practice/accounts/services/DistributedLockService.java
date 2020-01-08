@@ -43,4 +43,9 @@ public class DistributedLockService {
       }
     }
   }
+
+  @Transactional
+  public void unLock(Integer userId, String transactionNumber) {
+    accountRepository.removeDistributedLock(userId, transactionNumber);
+  }
 }

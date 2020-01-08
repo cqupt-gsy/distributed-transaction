@@ -9,6 +9,7 @@ import static apprentice.practice.api.services.enums.Results.TRYING_STATUS;
 import static apprentice.practice.api.services.enums.Results.UNKNOWN_EXCEPTION;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.concurrent.CompletableFuture.runAsync;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.apache.logging.log4j.util.Strings.isNotBlank;
@@ -41,16 +42,15 @@ public class TransactionManagerService {
     this.accountManagerService = accountManagerService;
   }
 
-  // 1. 实现Try阶段需要的逻辑
-  // 2. 实现Confirm阶段需要的逻辑
-  // 3. 实现Cancel阶段需要的逻辑
-  public String execute(TransactionCommand command) {
+  // 资金数据正确排第一，其次考虑并发性
+  public String execute(TransactionCommand command)
+      throws ExecutionException, InterruptedException {
     verifyTransactionMoney(command.getTransactionMoney());
     verifyAccount(command.getTransformerId(), command.getTransformeeId());
     verifyEnvelope(command.getEnvelopeId(), command.getEnvelopeMoney());
     verifyIntegral(command.getIntegralId(), command.getIntegral());
 
-    Results results = transactionService.tryStartTransaction(command);
+    Results results = transactionService.tryTransaction(command);
     if (results == TRYING_STATUS
         || results == CONFIRM_STATUS
         || results == CANCEL_STATUS
@@ -64,18 +64,26 @@ public class TransactionManagerService {
           supplyAsync(() -> accountManagerService.tryTransferFrom(command));
       CompletableFuture<Results> tryTransferTo =
           supplyAsync(() -> accountManagerService.tryTransferTo(command));
-      try {
-        if (tryTransferFrom.get() == TRANSFER_SUCCESS && tryTransferTo.get() == TRANSFER_SUCCESS) {
-          return SUCCESS_MESSAGE;
-        }
-      } catch (InterruptedException | ExecutionException e) {
-        // 三方服务发生异常后会进入该分支，该分支需要发起CANCEL流程
-        return FAILED_MESSAGE;
+      if (tryTransferFrom.get() == TRANSFER_SUCCESS && tryTransferTo.get() == TRANSFER_SUCCESS) {
+        runAsync(() -> confirmTransaction(command));
+        return SUCCESS_MESSAGE;
       }
-      return FAILED_MESSAGE;
-    } else {
-      return FAILED_MESSAGE;
     }
+    runAsync(() -> cancelTransaction(command));
+    return FAILED_MESSAGE;
+  }
+
+  // 如果这里系统挂了，没有执行Confirm操作怎么办？锁需要自动释放？
+  private void confirmTransaction(TransactionCommand command) {
+    transactionService.confirmTransaction(command.getTransactionNumber());
+    runAsync(() -> accountManagerService.confirmTransferFrom(command));
+    runAsync(() -> accountManagerService.confirmTransferTo(command));
+  }
+
+  private void cancelTransaction(TransactionCommand command) {
+    transactionService.cancelTransaction(command.getTransactionNumber());
+    runAsync(() -> accountManagerService.cancelTransferTo(command));
+    runAsync(() -> accountManagerService.cancelTransferFrom(command));
   }
 
   private void verifyTransactionMoney(BigDecimal transactionMoney) {

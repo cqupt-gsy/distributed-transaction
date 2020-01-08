@@ -5,6 +5,7 @@ import apprentice.practice.transactions.model.Transaction;
 import apprentice.practice.transactions.services.TransactionManagerService;
 import apprentice.practice.transactions.services.TransactionService;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +31,7 @@ public class TransactionController {
   }
 
   @PostMapping("/create")
-  public String create(@RequestBody TransactionCommand transactionCommand) {
+  public String create(@RequestBody TransactionCommand transactionCommand) throws ExecutionException, InterruptedException {
     return transactionManagerService.execute(transactionCommand);
   }
 }

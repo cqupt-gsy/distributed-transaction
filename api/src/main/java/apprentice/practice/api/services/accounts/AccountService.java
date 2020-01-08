@@ -10,5 +10,13 @@ public interface AccountService {
 
   Results tryTransferFrom(TransferCommand transferCommand);
 
+  void confirmTransferFrom(TransferCommand transferCommand);
+
+  void cancelTransferFrom(TransferCommand transferCommand);
+
   Results tryTransferTo(TransferCommand transferCommand);
+
+  void confirmTransferTo(TransferCommand transferCommand);
+
+  void cancelTransferTo(TransferCommand transferCommand);
 }

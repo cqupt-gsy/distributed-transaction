@@ -17,4 +17,9 @@ public final class TransactionSQLProvider {
           + "envelope_id, envelope_money, integral_id, integral, status, create_at, update_at) "
           + "VALUES(#{transactionNumber}, #{transactionMoney}, #{transformerId}, #{transformeeId}, current_timestamp, "
           + "#{envelopeId}, #{envelopeMoney}, #{integralId}, #{integral}, #{status}, current_timestamp, current_timestamp)";
+
+  public static final String UPDATE_TRANSACTION =
+      "UPDATE transactions "
+          + "SET status=#{status}, update_at=current_timestamp "
+          + "WHERE transaction_number=#{transactionNumber}";
 }
