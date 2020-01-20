@@ -4,6 +4,7 @@ import static apprentice.practice.api.enums.Results.TRY_FAILED;
 import static apprentice.practice.api.enums.Results.TRY_SUCCESS;
 import static apprentice.practice.api.enums.Status.CANCEL;
 import static apprentice.practice.api.enums.Status.CONFIRM;
+import static apprentice.practice.api.enums.Status.TRY;
 
 import apprentice.practice.api.enums.Results;
 import apprentice.practice.api.model.Account;
@@ -33,71 +34,89 @@ public class TransferOutServiceImpl implements TransferOutService {
 
   @Override
   @Transactional
-  public Results tryTransferOut(TransferOutCommand command) {
+  public Results tryTransferOut(TransferOutCommand command) {  // 允许幂等操作
     Integer userId = command.getUserId();
     String transactionNumber = command.getTransactionNumber();
     BigDecimal transactionMoney = command.getBalance();
 
     distributedLockService.tryLock(userId, transactionNumber);
+    AccountBackUp rollback = transferOutRepository.findRollback(userId, transactionNumber);
 
-    Account account = transferOutRepository.findAccount(userId);
-    if (account == null) {
-      log.info(
-          "Try transfer out failed from {} with {} for {}",
-          userId,
-          transactionMoney,
-          transactionNumber);
-      return TRY_FAILED;
+    if (rollback == null) {
+      Account account = transferOutRepository.findAccount(userId);
+      if (account == null) {
+        logTryTransferStatus(userId, transactionNumber, transactionMoney, TRY_FAILED.name());
+        return TRY_FAILED;
+      }
+      BigDecimal originalBalance = account.getBalance();
+      BigDecimal newBalance = originalBalance.subtract(transactionMoney);
+      transferOutRepository.saveRollback(
+          AccountBackUp.createBy(
+              userId, transactionNumber, originalBalance, newBalance, transactionMoney));
+      if (transferOutRepository.transfer(userId, newBalance)) {
+        logTryTransferStatus(userId, transactionNumber, transactionMoney, TRY_SUCCESS.name());
+        return TRY_SUCCESS;
+      } else {
+        logTryTransferStatus(userId, transactionNumber, transactionMoney, TRY_FAILED.name());
+        return TRY_FAILED;
+      }
     }
-    BigDecimal originalBalance = account.getBalance();
-    BigDecimal newBalance = originalBalance.subtract(transactionMoney);
-    transferOutRepository.saveRollback(
-        AccountBackUp.createBy(
-            userId, transactionNumber, originalBalance, newBalance, transactionMoney));
-    if (transferOutRepository.transfer(userId, newBalance)) {
-      log.info(
-          "Try transfer out success from {} with {} for {}",
-          userId,
-          transactionMoney,
-          transactionNumber);
+
+    if (rollback.getStatus() == CONFIRM || rollback.getStatus() == TRY) {
       return TRY_SUCCESS;
     } else {
-      log.info(
-          "Try transfer out failed from {} with {} for {}",
-          userId,
-          transactionMoney,
-          transactionNumber);
       return TRY_FAILED;
     }
   }
 
   @Override
   @Transactional
-  public void confirmTransferOut(TransferOutCommand command) {
+  public void confirmTransferOut(TransferOutCommand command) {  // 允许幂等操作
     Integer userId = command.getUserId();
     String transactionNumber = command.getTransactionNumber();
     BigDecimal transactionMoney = command.getBalance();
+    AccountBackUp rollback = transferOutRepository.findRollback(userId, transactionNumber);
+    if (rollback.getStatus() == CONFIRM) {
+      return;
+    }
+
     transferOutRepository.updateRollback(userId, transactionNumber, CONFIRM);
     distributedLockService.unLock(userId, transactionNumber);
+    logConfirmOrCancelStatus(userId, transactionNumber, transactionMoney, CONFIRM.name());
+  }
+
+  @Override
+  @Transactional
+  public void cancelTransferOut(TransferOutCommand command) {  // 允许幂等操作
+    Integer userId = command.getUserId();
+    String transactionNumber = command.getTransactionNumber();
+    BigDecimal transactionMoney = command.getBalance();
+    AccountBackUp rollback = transferOutRepository.findRollback(userId, transactionNumber);
+    if (rollback.getStatus() == CANCEL) {
+      return;
+    }
+
+    transferOutRepository.transfer(userId, rollback.getOriginalBalance());
+    transferOutRepository.updateRollback(userId, transactionNumber, CANCEL);
+    distributedLockService.unLock(userId, transactionNumber);
+    logConfirmOrCancelStatus(userId, transactionNumber, transactionMoney, CANCEL.name());
+  }
+
+  private void logTryTransferStatus(
+      Integer userId, String transactionNumber, BigDecimal transactionMoney, String status) {
     log.info(
-        "Confirm transfer out success from {} with {} for {}",
+        "Transfer out {} from {} with {} for {}",
+        status,
         userId,
         transactionMoney,
         transactionNumber);
   }
 
-  @Override
-  @Transactional
-  public void cancelTransferOut(TransferOutCommand command) {
-    Integer userId = command.getUserId();
-    String transactionNumber = command.getTransactionNumber();
-    BigDecimal transactionMoney = command.getBalance();
-    AccountBackUp accountBackUp = transferOutRepository.findRollback(userId, transactionNumber);
-    transferOutRepository.transfer(userId, accountBackUp.getOriginalBalance());
-    transferOutRepository.updateRollback(userId, transactionNumber, CANCEL);
-    distributedLockService.unLock(userId, transactionNumber);
+  private void logConfirmOrCancelStatus(
+      Integer userId, String transactionNumber, BigDecimal transactionMoney, String status) {
     log.info(
-        "Cancel transfer out success from {} with {} for {}",
+        "Transfer out {} from {} with {} for {}",
+        status,
         userId,
         transactionMoney,
         transactionNumber);

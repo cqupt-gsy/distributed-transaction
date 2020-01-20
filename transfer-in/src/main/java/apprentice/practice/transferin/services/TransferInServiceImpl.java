@@ -4,6 +4,7 @@ import static apprentice.practice.api.enums.Results.TRY_FAILED;
 import static apprentice.practice.api.enums.Results.TRY_SUCCESS;
 import static apprentice.practice.api.enums.Status.CANCEL;
 import static apprentice.practice.api.enums.Status.CONFIRM;
+import static apprentice.practice.api.enums.Status.TRY;
 
 import apprentice.practice.api.enums.Results;
 import apprentice.practice.api.model.Account;
@@ -14,6 +15,8 @@ import apprentice.practice.transferin.repositories.TransferInRepository;
 import java.math.BigDecimal;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -22,6 +25,7 @@ public class TransferInServiceImpl implements TransferInService {
   private final TransferInRepository transferInRepository;
   private final DistributedLockService distributedLockService;
 
+  @Autowired
   public TransferInServiceImpl(
       TransferInRepository transferInRepository, DistributedLockService distributedLockService) {
     this.transferInRepository = transferInRepository;
@@ -29,70 +33,90 @@ public class TransferInServiceImpl implements TransferInService {
   }
 
   @Override
-  public Results tryTransferIn(TransferInCommand command) {
+  @Transactional
+  public Results tryTransferIn(TransferInCommand command) {  // 允许幂等操作
     Integer userId = command.getUserId();
     String transactionNumber = command.getTransactionNumber();
     BigDecimal transactionMoney = command.getBalance();
 
     distributedLockService.tryLock(userId, transactionNumber);
+    AccountBackUp rollback = transferInRepository.findRollback(userId, transactionNumber);
 
-    // 因为有全局分布式锁，所以可以保障，查出来的用户数据就是最新的
-    Account account = transferInRepository.findAccount(userId);
-    if (account == null) {
-      log.info(
-          "Try transfer in failed from {} with {} for {}",
-          userId,
-          transactionMoney,
-          transactionNumber);
-      return TRY_FAILED;
+    if (rollback == null) {
+      Account account = transferInRepository.findAccount(userId);
+      if (account == null) {
+        logTryTransferStatus(userId, transactionNumber, transactionMoney, TRY_FAILED.name());
+        return TRY_FAILED;
+      }
+      BigDecimal originalBalance = account.getBalance();
+      BigDecimal newBalance = originalBalance.add(transactionMoney);
+      transferInRepository.saveRollback(
+          AccountBackUp.createBy(
+              userId, transactionNumber, originalBalance, newBalance, transactionMoney));
+      if (transferInRepository.transfer(userId, newBalance)) {
+        logTryTransferStatus(userId, transactionNumber, transactionMoney, TRY_SUCCESS.name());
+        return TRY_SUCCESS;
+      } else {
+        logTryTransferStatus(userId, transactionNumber, transactionMoney, TRY_FAILED.name());
+        return TRY_FAILED;
+      }
     }
-    BigDecimal originalBalance = account.getBalance();
-    BigDecimal newBalance = originalBalance.add(transactionMoney);
-    transferInRepository.saveRollback(
-        AccountBackUp.createBy(
-            userId, transactionNumber, originalBalance, newBalance, transactionMoney));
-    if (transferInRepository.transfer(userId, newBalance)) {
-      log.info(
-          "Try transfer in success from {} with {} for {}",
-          userId,
-          transactionMoney,
-          transactionNumber);
+
+    if (rollback.getStatus() == CONFIRM || rollback.getStatus() == TRY) {
       return TRY_SUCCESS;
     } else {
-      log.info(
-          "Try transfer in failed from {} with {} for {}",
-          userId,
-          transactionMoney,
-          transactionNumber);
-      return TRY_FAILED; // 余额不足不会发生变化，可以进入CANCEL状态
+      return TRY_FAILED;
     }
   }
 
   @Override
-  public void confirmTransferIn(TransferInCommand command) {
+  @Transactional
+  public void confirmTransferIn(TransferInCommand command) {  // 允许幂等操作
     Integer userId = command.getUserId();
     String transactionNumber = command.getTransactionNumber();
     BigDecimal transactionMoney = command.getBalance();
+    AccountBackUp rollback = transferInRepository.findRollback(userId, transactionNumber);
+    if (rollback.getStatus() == CONFIRM) {
+      return;
+    }
+
     transferInRepository.updateRollback(userId, transactionNumber, CONFIRM);
     distributedLockService.unLock(userId, transactionNumber);
+    logConfirmOrCancelStatus(userId, transactionNumber, transactionMoney, CONFIRM.name());
+  }
+
+  @Override
+  @Transactional
+  public void cancelTransferIn(TransferInCommand command) {  // 允许幂等操作
+    Integer userId = command.getUserId();
+    String transactionNumber = command.getTransactionNumber();
+    BigDecimal transactionMoney = command.getBalance();
+    AccountBackUp rollback = transferInRepository.findRollback(userId, transactionNumber);
+    if (rollback.getStatus() == CANCEL) {
+      return;
+    }
+
+    transferInRepository.transfer(userId, rollback.getOriginalBalance());
+    transferInRepository.updateRollback(userId, transactionNumber, CANCEL);
+    distributedLockService.unLock(userId, transactionNumber);
+    logConfirmOrCancelStatus(userId, transactionNumber, transactionMoney, CANCEL.name());
+  }
+
+  private void logTryTransferStatus(
+      Integer userId, String transactionNumber, BigDecimal transactionMoney, String status) {
     log.info(
-        "Confirm transfer in success from {} with {} for {}",
+        "Transfer in {} from {} with {} for {}",
+        status,
         userId,
         transactionMoney,
         transactionNumber);
   }
 
-  @Override
-  public void cancelTransferIn(TransferInCommand command) {
-    Integer userId = command.getUserId();
-    String transactionNumber = command.getTransactionNumber();
-    BigDecimal transactionMoney = command.getBalance();
-    AccountBackUp accountBackUp = transferInRepository.findRollback(userId, transactionNumber);
-    transferInRepository.transfer(userId, accountBackUp.getOriginalBalance());
-    transferInRepository.updateRollback(userId, transactionNumber, CANCEL);
-    distributedLockService.unLock(userId, transactionNumber);
+  private void logConfirmOrCancelStatus(
+      Integer userId, String transactionNumber, BigDecimal transactionMoney, String status) {
     log.info(
-        "Cancel transfer in success from {} with {} for {}",
+        "Transfer out {} from {} with {} for {}",
+        status,
         userId,
         transactionMoney,
         transactionNumber);

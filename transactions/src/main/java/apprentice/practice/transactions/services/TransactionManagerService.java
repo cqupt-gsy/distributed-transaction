@@ -47,6 +47,7 @@ public class TransactionManagerService {
   // 资金数据正确排第一，其次考虑并发性
   public String execute(TransactionCommand command)
       throws ExecutionException, InterruptedException {
+    verifyTransactionNumber(command.getTransactionNumber());
     verifyTransactionMoney(command.getTransactionMoney());
     verifyAccount(command.getTransformerId(), command.getTransformeeId());
     verifyEnvelope(command.getEnvelopeId(), command.getEnvelopeMoney());
@@ -108,6 +109,12 @@ public class TransactionManagerService {
       if (transferOut.isDone() && transferIn.isDone()) {
         break;
       }
+    }
+  }
+
+  private void verifyTransactionNumber(String transactionNumber) {
+    if (isBlank(transactionNumber)) {
+      throw new InvalidParameterException("Transaction number invalid");
     }
   }
 
