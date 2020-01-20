@@ -5,7 +5,7 @@ import static apprentice.practice.transactions.sqlprovider.TransactionSQLProvide
 import static apprentice.practice.transactions.sqlprovider.TransactionSQLProvider.SELECT_TRANSACTION_BY_TRANSACTION_NUMBER;
 import static apprentice.practice.transactions.sqlprovider.TransactionSQLProvider.UPDATE_TRANSACTION;
 
-import apprentice.practice.api.services.enums.Status;
+import apprentice.practice.api.enums.Status;
 import apprentice.practice.transactions.model.Transaction;
 import java.util.List;
 import org.apache.ibatis.annotations.Insert;

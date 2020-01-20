@@ -1,12 +1,12 @@
 package apprentice.practice.transactions.services;
 
-import static apprentice.practice.api.services.enums.Results.CANCEL_STATUS;
-import static apprentice.practice.api.services.enums.Results.CONFIRM_STATUS;
-import static apprentice.practice.api.services.enums.Results.CREATE_TRANSACTION_SUCCESS;
-import static apprentice.practice.api.services.enums.Results.DUPLICATE_KEY;
-import static apprentice.practice.api.services.enums.Results.TRANSFER_SUCCESS;
-import static apprentice.practice.api.services.enums.Results.TRYING_STATUS;
-import static apprentice.practice.api.services.enums.Results.UNKNOWN_EXCEPTION;
+import static apprentice.practice.api.enums.Results.CANCEL_STATUS;
+import static apprentice.practice.api.enums.Results.CONFIRM_STATUS;
+import static apprentice.practice.api.enums.Results.CREATE_TRANSACTION_SUCCESS;
+import static apprentice.practice.api.enums.Results.DUPLICATE_KEY;
+import static apprentice.practice.api.enums.Results.TRANSFER_SUCCESS;
+import static apprentice.practice.api.enums.Results.TRYING_STATUS;
+import static apprentice.practice.api.enums.Results.UNKNOWN_EXCEPTION;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.CompletableFuture.runAsync;
@@ -14,7 +14,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.apache.logging.log4j.util.Strings.isNotBlank;
 
-import apprentice.practice.api.services.enums.Results;
+import apprentice.practice.api.enums.Results;
 import apprentice.practice.transactions.command.TransactionCommand;
 import java.math.BigDecimal;
 import java.security.InvalidParameterException;

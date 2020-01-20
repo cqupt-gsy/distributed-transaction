@@ -1,11 +1,11 @@
 package apprentice.practice.transactions.services;
 
-import static apprentice.practice.api.services.enums.Results.TRANSFER_FAILED;
-import static apprentice.practice.api.services.utils.SystemSleeper.sleepOneSecond;
+import static apprentice.practice.api.enums.Results.TRANSFER_FAILED;
+import static apprentice.practice.api.utils.SystemSleeper.sleepOneSecond;
 
-import apprentice.practice.api.services.accounts.AccountService;
-import apprentice.practice.api.services.command.TransferCommand;
-import apprentice.practice.api.services.enums.Results;
+import apprentice.practice.api.accounts.services.AccountService;
+import apprentice.practice.api.transferout.command.TransferOutCommand;
+import apprentice.practice.api.enums.Results;
 import apprentice.practice.transactions.command.TransactionCommand;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.Reference;
@@ -54,7 +54,7 @@ public class AccountManagerService {
     }
   }
 
-  private TransferCommand getTransferFromCommand(TransactionCommand command) {
+  private TransferOutCommand getTransferFromCommand(TransactionCommand command) {
     return getTransferCommand(command.getTransformerId(), command);
   }
 
@@ -95,13 +95,13 @@ public class AccountManagerService {
     }
   }
 
-  private TransferCommand getTransferToCommand(TransactionCommand command) {
+  private TransferOutCommand getTransferToCommand(TransactionCommand command) {
     return getTransferCommand(command.getTransformeeId(), command);
   }
 
 
-  private TransferCommand getTransferCommand(Integer transferId, TransactionCommand command) {
-    return TransferCommand.createFrom(
+  private TransferOutCommand getTransferCommand(Integer transferId, TransactionCommand command) {
+    return TransferOutCommand.createFrom(
         transferId, command.getTransactionNumber(), command.getTransactionMoney());
   }
 }

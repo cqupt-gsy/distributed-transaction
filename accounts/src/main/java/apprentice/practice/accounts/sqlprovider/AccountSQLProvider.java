@@ -12,38 +12,4 @@ public final class AccountSQLProvider {
       "INSERT INTO "
           + "account(phone_number, name, balance, create_at, update_at) "
           + "VALUES(#{phoneNumber}, #{name}, #{balance}, current_timestamp, current_timestamp)";
-
-  public static final String TRANSFER_MONEY =
-      "UPDATE account "
-          + "SET balance = #{newBalance}, update_at=current_timestamp "
-          + "WHERE id=#{userId} AND #{newBalance} > 0";
-
-
-  public static final String SELECT_ACCOUNT_BACK_UP =
-      "SELECT * FROM account_back_up WHERE user_id=#{userId} AND transaction_number=#{transactionNumber}";
-
-  public static final String INSERT_ACCOUNT_BACK_UP =
-      "INSERT INTO "
-          + "account_back_up(user_id, transaction_number, original_balance, new_balance, transaction_money, "
-          + "status, create_at, update_at) "
-          + "VALUES(#{userId}, #{transactionNumber}, #{originalBalance}, #{newBalance}, #{transactionMoney}, "
-          + "#{status}, current_timestamp, current_timestamp)";
-
-  public static final String UPDATE_ACCOUNT_BACK_UP =
-      "UPDATE account_back_up "
-          + "SET status=#{status}, update_at=current_timestamp "
-          + "WHERE user_id=#{userId} AND transaction_number=#{transactionNumber}";
-
-
-  public static final String SELECT_DISTRIBUTED_LOCK =
-      "SELECT * FROM distributed_lock WHERE user_id=#{userId}";
-
-  public static final String INSERT_DISTRIBUTED_LOCK =
-      "INSERT INTO "
-          + "distributed_lock(user_id, transaction_number, lock_until, create_at, update_at) "
-          + "VALUES(#{userId}, #{transactionNumber}, #{lockUntil}, current_timestamp, current_timestamp)";
-
-  public static final String REMOVE_DISTRIBUTED_LOCK =
-      "DELETE FROM distributed_lock "
-          + "WHERE user_id=#{userId} AND transaction_number=#{transactionNumber}";
 }

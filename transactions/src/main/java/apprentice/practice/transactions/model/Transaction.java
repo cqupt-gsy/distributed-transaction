@@ -1,8 +1,8 @@
 package apprentice.practice.transactions.model;
 
-import static apprentice.practice.api.services.enums.Status.TRY;
+import static apprentice.practice.api.enums.Status.TRY;
 
-import apprentice.practice.api.services.enums.Status;
+import apprentice.practice.api.enums.Status;
 import apprentice.practice.transactions.command.TransactionCommand;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

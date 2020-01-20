@@ -1,7 +1,7 @@
 package apprentice.practice.transactions.controllers;
 
-import apprentice.practice.api.services.accounts.AccountService;
-import apprentice.practice.api.services.command.CreateAccountCommand;
+import apprentice.practice.api.accounts.services.AccountService;
+import apprentice.practice.accounts.command.CreateAccountCommand;
 import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

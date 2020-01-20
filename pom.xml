@@ -154,7 +154,9 @@
     <modules>
         <module>api</module>
         <module>transactions</module>
+        <module>transfer-out</module>
         <module>accounts</module>
+        <module>transfer-in</module>
     </modules>
 
 </project>

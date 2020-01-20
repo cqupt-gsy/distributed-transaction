@@ -1,16 +1,16 @@
 package apprentice.practice.transactions.services;
 
-import static apprentice.practice.api.services.enums.Results.CANCEL_STATUS;
-import static apprentice.practice.api.services.enums.Results.CONFIRM_STATUS;
-import static apprentice.practice.api.services.enums.Results.CREATE_TRANSACTION_SUCCESS;
-import static apprentice.practice.api.services.enums.Results.DUPLICATE_KEY;
-import static apprentice.practice.api.services.enums.Results.TRYING_STATUS;
-import static apprentice.practice.api.services.enums.Results.UNKNOWN_EXCEPTION;
-import static apprentice.practice.api.services.enums.Status.CANCEL;
-import static apprentice.practice.api.services.enums.Status.CONFIRM;
-import static apprentice.practice.api.services.enums.Status.TRY;
+import static apprentice.practice.api.enums.Results.CANCEL_STATUS;
+import static apprentice.practice.api.enums.Results.CONFIRM_STATUS;
+import static apprentice.practice.api.enums.Results.CREATE_TRANSACTION_SUCCESS;
+import static apprentice.practice.api.enums.Results.DUPLICATE_KEY;
+import static apprentice.practice.api.enums.Results.TRYING_STATUS;
+import static apprentice.practice.api.enums.Results.UNKNOWN_EXCEPTION;
+import static apprentice.practice.api.enums.Status.CANCEL;
+import static apprentice.practice.api.enums.Status.CONFIRM;
+import static apprentice.practice.api.enums.Status.TRY;
 
-import apprentice.practice.api.services.enums.Results;
+import apprentice.practice.api.enums.Results;
 import apprentice.practice.transactions.TransactionRepository;
 import apprentice.practice.transactions.command.TransactionCommand;
 import apprentice.practice.transactions.model.Transaction;
