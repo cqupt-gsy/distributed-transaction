@@ -25,7 +25,11 @@ public interface TransactionRepository {
   Transaction selectTransaction(String transactionNumber);
 
   @Insert(INSERT_TRANSACTION)
-  @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn="id", flushCache = FlushCachePolicy.TRUE)
+  @Options(
+      useGeneratedKeys = true,
+      keyProperty = "id",
+      keyColumn = "id",
+      flushCache = FlushCachePolicy.TRUE)
   void save(Transaction transaction);
 
   @Update(UPDATE_TRANSACTION)

@@ -1,7 +1,7 @@
 package apprentice.practice.transferout.services;
 
-import static apprentice.practice.api.enums.Results.TRANSFER_FAILED;
-import static apprentice.practice.api.enums.Results.TRANSFER_SUCCESS;
+import static apprentice.practice.api.enums.Results.TRY_FAILED;
+import static apprentice.practice.api.enums.Results.TRY_SUCCESS;
 import static apprentice.practice.api.enums.Status.CANCEL;
 import static apprentice.practice.api.enums.Status.CONFIRM;
 
@@ -47,7 +47,7 @@ public class TransferOutServiceImpl implements TransferOutService {
           userId,
           transactionMoney,
           transactionNumber);
-      return TRANSFER_FAILED;
+      return TRY_FAILED;
     }
     BigDecimal originalBalance = account.getBalance();
     BigDecimal newBalance = originalBalance.subtract(transactionMoney);
@@ -60,14 +60,14 @@ public class TransferOutServiceImpl implements TransferOutService {
           userId,
           transactionMoney,
           transactionNumber);
-      return TRANSFER_SUCCESS;
+      return TRY_SUCCESS;
     } else {
       log.info(
           "Try transfer out failed from {} with {} for {}",
           userId,
           transactionMoney,
           transactionNumber);
-      return TRANSFER_FAILED;
+      return TRY_FAILED;
     }
   }
 

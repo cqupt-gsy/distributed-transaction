@@ -1,6 +1,5 @@
 package apprentice.practice.api.transferin.command;
 
-import apprentice.practice.api.transferout.command.TransferOutCommand;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
@@ -20,9 +19,9 @@ public class TransferInCommand implements Serializable {
   private String transactionNumber;
   private BigDecimal balance;
 
-  public static TransferOutCommand createFrom(
+  public static TransferInCommand createFrom(
       Integer userId, String transactionNumber, BigDecimal transactionMoney) {
-    return TransferOutCommand.builder()
+    return TransferInCommand.builder()
         .userId(userId)
         .transactionNumber(transactionNumber)
         .balance(transactionMoney)

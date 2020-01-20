@@ -4,8 +4,10 @@ import static apprentice.practice.api.enums.Results.CANCEL_STATUS;
 import static apprentice.practice.api.enums.Results.CONFIRM_STATUS;
 import static apprentice.practice.api.enums.Results.CREATE_TRANSACTION_SUCCESS;
 import static apprentice.practice.api.enums.Results.DUPLICATE_KEY;
-import static apprentice.practice.api.enums.Results.TRANSFER_SUCCESS;
+import static apprentice.practice.api.enums.Results.TRANSACTION_FAILED;
+import static apprentice.practice.api.enums.Results.TRANSACTION_SUCCESS;
 import static apprentice.practice.api.enums.Results.TRYING_STATUS;
+import static apprentice.practice.api.enums.Results.TRY_SUCCESS;
 import static apprentice.practice.api.enums.Results.UNKNOWN_EXCEPTION;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -28,18 +30,18 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class TransactionManagerService {
 
-  private static final String CONFIRM_MESSAGE = "";
-
-  private static final String SUCCESS_MESSAGE = "OK! transaction success.";
-  private static final String FAILED_MESSAGE = "Ops, transaction failed.";
   private final TransactionService transactionService;
-  private final AccountManagerService accountManagerService;
+  private final TransferOutServiceProxy transferOutServiceProxy;
+  private final TransferInServiceProxy transferInServiceProxy;
 
   @Autowired
   public TransactionManagerService(
-      TransactionService transactionService, AccountManagerService accountManagerService) {
+      TransactionService transactionService,
+      TransferOutServiceProxy transferOutServiceProxy,
+      TransferInServiceProxy transferInServiceProxy) {
     this.transactionService = transactionService;
-    this.accountManagerService = accountManagerService;
+    this.transferOutServiceProxy = transferOutServiceProxy;
+    this.transferInServiceProxy = transferInServiceProxy;
   }
 
   // 资金数据正确排第一，其次考虑并发性
@@ -51,39 +53,62 @@ public class TransactionManagerService {
     verifyIntegral(command.getIntegralId(), command.getIntegral());
 
     Results results = transactionService.tryTransaction(command);
-    if (results == TRYING_STATUS
-        || results == CONFIRM_STATUS
+    if (results == CONFIRM_STATUS
         || results == CANCEL_STATUS
         || results == DUPLICATE_KEY
         || results == UNKNOWN_EXCEPTION) {
       return results.getMessage();
-    } // TODO 如果执行到这里就挂了，所有的TRY状态都无法重试，必须重新开始新交易。需要自动恢复机制？
+    }
 
-    if (results == CREATE_TRANSACTION_SUCCESS) {
-      CompletableFuture<Results> tryTransferFrom =
-          supplyAsync(() -> accountManagerService.tryTransferFrom(command));
-      CompletableFuture<Results> tryTransferTo =
-          supplyAsync(() -> accountManagerService.tryTransferTo(command));
-      if (tryTransferFrom.get() == TRANSFER_SUCCESS && tryTransferTo.get() == TRANSFER_SUCCESS) {
-        runAsync(() -> confirmTransaction(command));
-        return SUCCESS_MESSAGE;
+    if (results == CREATE_TRANSACTION_SUCCESS || results == TRYING_STATUS) {
+      log.debug(results.getMessage());
+
+      if (tryTransaction(command)) {
+        // 底层服务采用集群部署，加上重试机制，肯定可以得到返回。这里保证必须释放锁，否则会对后续的交易产生影响
+        confirmTransaction(command);
+        transactionService.confirmTransaction(command.getTransactionNumber());
+        return TRANSACTION_SUCCESS.getMessage();
       }
     }
-    runAsync(() -> cancelTransaction(command));
-    return FAILED_MESSAGE;
+
+    // 底层服务采用集群部署，加上重试机制，肯定可以得到返回。这里保证必须释放锁，否则会对后续的交易产生影响
+    cancelTransaction(command);
+    transactionService.cancelTransaction(command.getTransactionNumber());
+    return TRANSACTION_FAILED.getMessage();
   }
 
-  // 如果这里系统挂了，没有执行Confirm操作怎么办？锁需要自动释放？
+  private boolean tryTransaction(TransactionCommand command)
+      throws ExecutionException, InterruptedException {
+    CompletableFuture<Results> tryTransferFrom =
+        supplyAsync(() -> transferOutServiceProxy.tryTransferOut(command));
+    CompletableFuture<Results> tryTransferTo =
+        supplyAsync(() -> transferInServiceProxy.tryTransferIn(command));
+    return tryTransferFrom.get() == TRY_SUCCESS && tryTransferTo.get() == TRY_SUCCESS;
+  }
+
   private void confirmTransaction(TransactionCommand command) {
-    transactionService.confirmTransaction(command.getTransactionNumber());
-    runAsync(() -> accountManagerService.confirmTransferFrom(command));
-    runAsync(() -> accountManagerService.confirmTransferTo(command));
+    CompletableFuture<Void> confirmTransferOut =
+        runAsync(() -> transferOutServiceProxy.confirmTransferOut(command));
+    CompletableFuture<Void> confirmTransferIn =
+        runAsync(() -> transferInServiceProxy.confirmTransferIn(command));
+    waitUntilFinished(confirmTransferOut, confirmTransferIn);
   }
 
   private void cancelTransaction(TransactionCommand command) {
-    transactionService.cancelTransaction(command.getTransactionNumber());
-    runAsync(() -> accountManagerService.cancelTransferTo(command));
-    runAsync(() -> accountManagerService.cancelTransferFrom(command));
+    CompletableFuture<Void> cancelTransferOut =
+        runAsync(() -> transferOutServiceProxy.cancelTransferOut(command));
+    CompletableFuture<Void> cancelTransferIn =
+        runAsync(() -> transferInServiceProxy.cancelTransferIn(command));
+    waitUntilFinished(cancelTransferOut, cancelTransferIn);
+  }
+
+  private void waitUntilFinished(
+      CompletableFuture<Void> transferOut, CompletableFuture<Void> transferIn) {
+    while (true) {
+      if (transferOut.isDone() && transferIn.isDone()) {
+        break;
+      }
+    }
   }
 
   private void verifyTransactionMoney(BigDecimal transactionMoney) {

@@ -2,7 +2,7 @@ package apprentice.practice.api.enums;
 
 public enum Results {
   CREATE_TRANSACTION_SUCCESS("Transaction create success and in TRY status."),
-  TRYING_STATUS("Transaction still in TRY status, wait a minute for retry."),
+  TRYING_STATUS("Transaction still in TRY status, retry again."),
   CONFIRM_STATUS("Transaction already finished with CONFIRM status, please do not retry."),
   CANCEL_STATUS(
       "Transaction already finished with CANCEL status, please start a new transaction and do retry."),
@@ -10,8 +10,11 @@ public enum Results {
       "Transaction with same transaction number start too many times, please wait a minute for retry."),
   UNKNOWN_EXCEPTION("Transaction failed with unknown reason, please try later"),
 
-  TRANSFER_SUCCESS("Transfer success, can continue CONFIRM stage."),
-  TRANSFER_FAILED("Transfer failed, can continue CANCEL stage");
+  TRY_SUCCESS("Transfer success, can continue CONFIRM stage."),
+  TRY_FAILED("Transfer failed, can continue CANCEL stage"),
+
+  TRANSACTION_SUCCESS("OK! transaction success."),
+  TRANSACTION_FAILED("Ops, transaction failed.");
 
   private String message;
 

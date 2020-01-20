@@ -36,9 +36,6 @@ public class TransactionService {
     return repository.findAll();
   }
 
-  // 该方法可以保证幂等，事务号相同的情况下，多次重试得到的结果是一致的
-  // 需要特别注意TRY状态，为了保证本服务在挂了后，客户端可以真正的执行重试，所以需要执行跟SUCCESS一样的步骤
-  // 因此所有的接口都必须幂等
   @Transactional
   public Results tryTransaction(TransactionCommand command) {
     String transactionNumber = command.getTransactionNumber();
