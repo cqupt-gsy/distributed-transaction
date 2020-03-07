@@ -50,6 +50,9 @@ public class TransferOutServiceImpl implements TransferOutService {
       }
       BigDecimal originalBalance = account.getBalance();
       BigDecimal newBalance = originalBalance.subtract(transactionMoney);
+      if (newBalance.doubleValue() < 0) {
+        return TRY_FAILED;
+      }
       transferOutRepository.saveRollback(
           AccountBackUp.createBy(
               userId, transactionNumber, originalBalance, newBalance, transactionMoney));
@@ -74,14 +77,14 @@ public class TransferOutServiceImpl implements TransferOutService {
   public void confirmTransferOut(TransferOutCommand command) {  // 允许幂等操作
     Integer userId = command.getUserId();
     String transactionNumber = command.getTransactionNumber();
+    distributedLockService.unLock(userId, transactionNumber);
+
     BigDecimal transactionMoney = command.getBalance();
     AccountBackUp rollback = transferOutRepository.findRollback(userId, transactionNumber);
-    if (rollback.getStatus() == CONFIRM) {
+    if (rollback == null || rollback.getStatus() == CONFIRM) {
       return;
     }
-
     transferOutRepository.updateRollback(userId, transactionNumber, CONFIRM);
-    distributedLockService.unLock(userId, transactionNumber);
     logConfirmOrCancelStatus(userId, transactionNumber, transactionMoney, CONFIRM.name());
   }
 
@@ -90,15 +93,15 @@ public class TransferOutServiceImpl implements TransferOutService {
   public void cancelTransferOut(TransferOutCommand command) {  // 允许幂等操作
     Integer userId = command.getUserId();
     String transactionNumber = command.getTransactionNumber();
+    distributedLockService.unLock(userId, transactionNumber);
+
     BigDecimal transactionMoney = command.getBalance();
     AccountBackUp rollback = transferOutRepository.findRollback(userId, transactionNumber);
-    if (rollback.getStatus() == CANCEL) {
+    if (rollback == null || rollback.getStatus() == CANCEL) {
       return;
     }
-
     transferOutRepository.transfer(userId, rollback.getOriginalBalance());
     transferOutRepository.updateRollback(userId, transactionNumber, CANCEL);
-    distributedLockService.unLock(userId, transactionNumber);
     logConfirmOrCancelStatus(userId, transactionNumber, transactionMoney, CANCEL.name());
   }
 

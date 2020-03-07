@@ -50,6 +50,9 @@ public class TransferInServiceImpl implements TransferInService {
       }
       BigDecimal originalBalance = account.getBalance();
       BigDecimal newBalance = originalBalance.add(transactionMoney);
+      if (newBalance.doubleValue() < 0) {
+        return TRY_FAILED;
+      }
       transferInRepository.saveRollback(
           AccountBackUp.createBy(
               userId, transactionNumber, originalBalance, newBalance, transactionMoney));
@@ -74,14 +77,14 @@ public class TransferInServiceImpl implements TransferInService {
   public void confirmTransferIn(TransferInCommand command) {  // 允许幂等操作
     Integer userId = command.getUserId();
     String transactionNumber = command.getTransactionNumber();
+    distributedLockService.unLock(userId, transactionNumber);
+
     BigDecimal transactionMoney = command.getBalance();
     AccountBackUp rollback = transferInRepository.findRollback(userId, transactionNumber);
-    if (rollback.getStatus() == CONFIRM) {
+    if (rollback == null || rollback.getStatus() == CONFIRM) {
       return;
     }
-
     transferInRepository.updateRollback(userId, transactionNumber, CONFIRM);
-    distributedLockService.unLock(userId, transactionNumber);
     logConfirmOrCancelStatus(userId, transactionNumber, transactionMoney, CONFIRM.name());
   }
 
@@ -90,15 +93,15 @@ public class TransferInServiceImpl implements TransferInService {
   public void cancelTransferIn(TransferInCommand command) {  // 允许幂等操作
     Integer userId = command.getUserId();
     String transactionNumber = command.getTransactionNumber();
+    distributedLockService.unLock(userId, transactionNumber);
+
     BigDecimal transactionMoney = command.getBalance();
     AccountBackUp rollback = transferInRepository.findRollback(userId, transactionNumber);
-    if (rollback.getStatus() == CANCEL) {
+    if (rollback == null || rollback.getStatus() == CANCEL) {
       return;
     }
-
     transferInRepository.transfer(userId, rollback.getOriginalBalance());
     transferInRepository.updateRollback(userId, transactionNumber, CANCEL);
-    distributedLockService.unLock(userId, transactionNumber);
     logConfirmOrCancelStatus(userId, transactionNumber, transactionMoney, CANCEL.name());
   }
 
